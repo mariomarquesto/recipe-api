@@ -7,11 +7,11 @@ import { and, eq } from 'drizzle-orm';
 
 const app = express();
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-
-// Health
+// Health route
 app.get('/api/health', (req, res) => {
   return res.status(200).json({
     status: 'OK',
@@ -19,8 +19,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-
-// ✅ POST: agregar favorito
+// Add favorite
 app.post('/api/favorites', async (req, res) => {
   try {
     const { userId, recipeId, title, image, cookTime, servings } = req.body;
@@ -31,53 +30,42 @@ app.post('/api/favorites', async (req, res) => {
 
     const newFavorite = await db
       .insert(favorites)
-      .values({
-        userId: Number(userId),
-        recipeId: Number(recipeId),
-        title,
-        image,
-        cookTime,
-        servings: Number(servings)
-      })
+      .values({ userId, recipeId, title, image, cookTime, servings })
       .returning();
 
-    res.status(201).json({
-      message: "Favorite saved successfully",
+    return res.status(201).json({
+      message: 'Favorite saved successfully',
       data: newFavorite[0]
     });
 
   } catch (error) {
-    console.error("🔥 ERROR POST:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("🔥 ERROR DRIZZLE:", error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-
-// ✅ DELETE: eliminar favorito
+// Delete favorite
 app.delete('/api/favorites/:userId/:recipeId', async (req, res) => {
   try {
     const { userId, recipeId } = req.params;
 
-    await db
-      .delete(favorites)
-      .where(
-        and(
-          eq(favorites.userId, Number(userId)),
-          eq(favorites.recipeId, Number(recipeId))
-        )
-      );
+    await db.delete(favorites).where(
+      and(
+        eq(favorites.userId, Number(userId)),
+        eq(favorites.recipeId, Number(recipeId))
+      )
+    );
 
-    res.status(200).json({ message: "Favorite removed successfully" });
+    return res.status(200).json({ message: "Favorite removed successfully" });
 
   } catch (error) {
-    console.error("🔥 ERROR DELETE:", error);
-    res.status(500).json({ error: "Something went wrong" });
+    console.log("error removing favorite", error);
+    return res.status(500).json({ error: "Something went wrong" });
   }
 });
 
-
-// ✅ GET: obtener todos los favoritos de un usuario
-app.get("/api/favorites/:userId", async (req, res) => {
+// Get favorites by user
+app.get('/api/favorites/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -86,19 +74,18 @@ app.get("/api/favorites/:userId", async (req, res) => {
       .from(favorites)
       .where(eq(favorites.userId, Number(userId)));
 
-    res.status(200).json(userFavorites);
+    return res.status(200).json(userFavorites);
 
   } catch (error) {
-    console.error("🔥 ERROR GET:", error);
-    res.status(500).json({ error: "Something went wrong" });
+    console.log("Error fetching favorites", error);
+    return res.status(500).json({ error: "Something went wrong" });
   }
 });
-
 
 const port = env.PORT || 5001;
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
 
 export default app;
