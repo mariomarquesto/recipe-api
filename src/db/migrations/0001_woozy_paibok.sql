@@ -1,0 +1,1 @@
+ALTER TABLE "favorites" RENAME COLUMN "reciped_id" TO "recipe_id";
