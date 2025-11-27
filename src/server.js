@@ -5,6 +5,9 @@ import { db } from './config/db.js';
 import { favorites } from './db/schema.js';
 import { and, eq } from 'drizzle-orm';
 
+import {job } from './config/cron.js'; // Asegurarse de que el cron job se inicie
+
+
 const app = express();
 
 // Middlewares
@@ -83,6 +86,10 @@ app.get('/api/favorites/:userId', async (req, res) => {
 });
 
 const port = env.PORT || 5001;
+
+if(process.env.NODE_ENV !== 'production' ) job.start();
+
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

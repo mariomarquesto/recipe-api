@@ -1,19 +1,19 @@
 import cron from "cron";
-import https from "https";  // ✔ corregido
+import https from "https";
 
-const job = new cron.CronJob("*/14 * * * *", function () {
-  https
-    .get(process.env.API_URL, (res) => {  // ✔ process.env corregido
-      if (res.statusCode === 200) {
-        console.log("Cron ping successful:", res.statusCode);
-      } else {
-        console.log("Cron ping returned non-200:", res.statusCode);
-      }
-    })
-    .on("error", (e) => console.log("Error while sending request:", e));
+export const job = new cron.CronJob("*/14 * * * *", function () {
+
+    const url = process.env.API_URL;
+
+    if (!url) {
+        console.log("❌ ERROR: API_URL no está definida en Render");
+        return;
+    }
+
+    https.get(url, (res) => {
+        console.log("Ping enviado ➜ Status:", res.statusCode);
+    }).on("error", (e) => {
+        console.log("❌ Error while sending request:", e);
+    });
+
 });
-
-// IMPORTANT → Start the job
-job.start();
-
-export default job;
